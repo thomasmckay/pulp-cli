@@ -2,6 +2,11 @@ import click
 import click_completion
 import coreapi
 import json
+import urllib.parse as urlparse
+
+from progress.spinner import Spinner
+from time import sleep
+
 
 DOCUMENT_PATH = "/home/vagrant/.coreapi/document.json"
 click_completion.init()
@@ -19,9 +24,7 @@ def install_callback(ctx, attr, value):
     exit(0)
 
 
-@click.group(
-    invoke_without_command=True,
-)
+@click.group(invoke_without_command=True)
 @click.option(
     "--install",
     is_flag=True,
@@ -30,17 +33,47 @@ def install_callback(ctx, attr, value):
     help="Install completion for the current shell. Make sure to have psutil installed.",
 )
 @click.pass_context
-def client(ctx, version):
+def client(ctx):
     if ctx.invoked_subcommand is not None:
         return
     click.echo(ctx.get_help())
 
 
-def apicall():
+def apicall(*args, **kwargs):
+    codec = coreapi.codecs.DisplayCodec()
+
     ctx = click.get_current_context()
     keys = ctx.command_path.split(" ")[1:]
-    resp = coreapi_client.action(decoded_doc, keys)
-    click.echo(resp)
+
+    resp = coreapi_client.action(
+        decoded_doc, keys, params={k: v for k, v in kwargs.items() if v is not None}
+    )
+
+    click.echo(codec.encode(resp, colorize=True))
+
+    if "task_id" in resp:
+        spinner = Spinner("Loading ")
+        task_progress = coreapi_client.action(
+            decoded_doc, ["tasks", "read"], params={"id": resp.get("task_id")}
+        )
+        while task_progress["state"] != "completed":
+            spinner.next()
+            sleep(.01)
+            task_progress = coreapi_client.action(
+                decoded_doc, ["tasks", "read"], params={"id": resp.get("task_id")}
+            )
+
+    while resp.get("next") or resp.get("previous"):
+        move = click.prompt("N for next page, P for previous")
+        if move == "N":
+            url = resp.get("next")
+        else:
+            url = resp.get("previous")
+        parsed = urlparse.urlparse(url)
+        resp = coreapi_client.action(
+            decoded_doc, keys, {"cursor": urlparse.parse_qs(parsed.query)["cursor"]}
+        )
+        click.echo(codec.encode(resp, colorize=True))
 
 
 def add_command(parent_command, name, metadata):
