@@ -5,6 +5,9 @@ import json
 import urllib.parse as urlparse
 
 from progress.spinner import Spinner
+from pygments import highlight
+from pygments.lexers import JsonLexer
+from pygments.formatters import Terminal256Formatter
 from time import sleep
 from uuid import UUID
 
@@ -50,8 +53,18 @@ def is_uuid4(uuid_string):
 
 
 def echo_resp(response):
-    codec = coreapi.codecs.DisplayCodec()
-    click.secho(codec.encode(response, colorize=True), fg="green")
+    try:
+        body = json.dumps(
+            obj=response,
+            sort_keys=True,
+            ensure_ascii=False,
+            indent=4
+        )
+    except ValueError:
+        codec = coreapi.codecs.DisplayCodec()
+        click.secho(codec.encode(response, colorize=True), fg="green")
+    else:
+        click.echo(highlight(body, JsonLexer(), Terminal256Formatter()))
 
 
 def apicall(*args, **kwargs):

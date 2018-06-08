@@ -1,29 +1,50 @@
-# Installation
+# pulp-cli
 
-1. `git clone git@github.com:werwty/pulpcli-POC.git`
-2. `pip3 install -e pulpcli-POC`
+This is a proof-of-concept intended to demonstrate an auto-generated Pulp 3 CLI.
+
+## Demo
+
+![Demo pic](https://i.imgur.com/AsgaO1Q.png)
+
+## Features
+
+- Auto-generated CLI commands with one command for each API endpoint
+- Support for plugins
+- Pagination support
+- Lookup via resource IDs or names
+- Help screens
+- Task polling
+- Autocompletion for commands and arguements
+- Extensibility
+  - Support in the future to create our own complex commands/workflows
+  - Users/plugin writers can create their own commands and ship their own cli plugins
 
 
-# Download document.json
-
-This currently needs to be saved to /home/vagrant/.coreapi/documents.json, support
-for storing it at a non hardcoded position is incoming
+## Installation
 
 ```
-$ wget http://pulp3.dev:8000/pulp/api/v3/?format=corejson
+$ git clone https://github.com/werwty/pulp-cli.git && cd pulp-cli
+$ mkvirtualenv --python="/usr/bin/python3" pulp-cli
+$ pip install -e .
+$ mkdir ~/.coreapi
+$ http :8000/pulp/api/v3/?format=corejson > ~/.coreapi/document.json
 ```
 
-
-# Set up BASH Completion
+## Set up BASH Completion
 
 ```
 $ pulp --install bash
 ```
 
+## Example Usage
 
-# Example Usage
+At any time, see a command's help screen:
 
-## Create a repository
+```
+$ pulp repositories create --help
+```
+
+### Create a repository
 
 ```
 $ pulp repositories create --name=foo
@@ -39,7 +60,7 @@ $ pulp repositories create --name=foo
 }
 ```
 
-## List repositories
+### List repositories
 
 ```
 $ pulp repositories list
@@ -61,7 +82,7 @@ $ pulp repositories list
 }
 ```
 
-## Create a remote
+### Create a remote
 ```
 $ pulp remotes file create --name=bar --url=https://repos.fedorapeople.org/pulp/pulp/demo_repos/test_file_repo/PULP_MANIFEST
 {
@@ -80,7 +101,7 @@ $ pulp remotes file create --name=bar --url=https://repos.fedorapeople.org/pulp/
 
 ```
 
-## Sync Repository foo with Remote bar
+### Sync Repository foo with Remote bar
 
 ```
 $ pulp remotes file sync --repository=http://pulp3.dev:8000/pulp/api/v3/repositories/c3550bb7-1984-4bd4-bbc4-5bc5483008b5/ --id=396b7eb5-97aa-4394-bc25-ca8be7dd19c4
@@ -126,7 +147,7 @@ Loading -{
 
 ```
 
-## View all repository version
+### View all repository version
 ```
 $ pulp repositories versions list
 Repository pk: foo
