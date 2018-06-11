@@ -2,6 +2,8 @@ import click
 import click_completion
 import coreapi
 import json
+import os
+import requests
 import urllib.parse as urlparse
 
 from progress.spinner import Spinner
@@ -11,12 +13,30 @@ from pygments.formatters import Terminal256Formatter
 from time import sleep
 from uuid import UUID
 
+CLI_PATH = os.path.join(os.path.expanduser("~"), ".pulpcli")
+DOCUMENT_PATH = os.path.join(CLI_PATH, "document.json")
 
-DOCUMENT_PATH = "/home/vagrant/.pulpcli/document.json"
 click_completion.init()
-decoded_doc = ""
-
+decoded_doc = None
 coreapi_client = coreapi.Client()
+
+
+def get_document():
+    if not os.path.exists(DOCUMENT_PATH):
+        click.echo("No schema set. Please use pulp get --url to set the schema")
+        return None
+    store = open(DOCUMENT_PATH, "rb")
+    content = store.read()
+    store.close()
+    codec = coreapi.codecs.CoreJSONCodec()
+    return codec.decode(content)
+
+
+def get_raw_document():
+    if not os.path.exists(DOCUMENT_PATH):
+        return {}
+    with open(DOCUMENT_PATH, "r") as doc:
+        return json.load(doc)
 
 
 # Install for click-completion
@@ -43,6 +63,15 @@ def client(ctx):
     click.echo(ctx.get_help())
 
 
+@client.command(help="Fetch a coreapi schema")
+@click.option("--url", help="url to pulp coreapi schema")
+def get(url):
+    if not os.path.exists(CLI_PATH):
+        os.mkdir(CLI_PATH)
+    resp = requests.get(url)
+    open(DOCUMENT_PATH, "wb").write(resp.content)
+
+
 def is_uuid4(uuid_string):
     try:
         UUID(uuid_string, version=4)
@@ -53,12 +82,7 @@ def is_uuid4(uuid_string):
 
 def echo_resp(response):
     try:
-        body = json.dumps(
-            obj=response,
-            sort_keys=True,
-            ensure_ascii=False,
-            indent=4
-        )
+        body = json.dumps(obj=response, sort_keys=True, ensure_ascii=False, indent=4)
     except ValueError:
         codec = coreapi.codecs.DisplayCodec()
         click.secho(codec.encode(response, colorize=True), fg="green")
@@ -76,9 +100,9 @@ def apicall(*args, **kwargs):
     for k, v in params.items():
 
         # If as passed in pk is not a uuid, see if we can find the uuid
-        if (k.endswith("_pk") or k =="id") and not is_uuid4(v):
+        if (k.endswith("_pk") or k == "id") and not is_uuid4(v):
             resp = coreapi_client.action(
-                decoded_doc, [keys[0], "list"], params={"name": v}
+                get_document(), [keys[0], "list"], params={"name": v}
             )
             if len(resp["results"]) == 1:
                 params[k] = resp["results"][0]["id"]
@@ -86,7 +110,7 @@ def apicall(*args, **kwargs):
                 click.secho("Invalid id or name", fg="red")
                 return
 
-    resp = coreapi_client.action(decoded_doc, keys, params=params)
+    resp = coreapi_client.action(get_document(), keys, params=params)
 
     echo_resp(resp)
 
@@ -94,13 +118,13 @@ def apicall(*args, **kwargs):
     if resp and "task_id" in resp:
         spinner = Spinner("Loading ")
         task_progress = coreapi_client.action(
-            decoded_doc, ["tasks", "read"], params={"id": resp.get("task_id")}
+            get_document(), ["tasks", "read"], params={"id": resp.get("task_id")}
         )
         while task_progress["state"] != "completed":
             spinner.next()
             sleep(.01)
             task_progress = coreapi_client.action(
-                decoded_doc, ["tasks", "read"], params={"id": resp.get("task_id")}
+                get_document(), ["tasks", "read"], params={"id": resp.get("task_id")}
             )
         echo_resp(task_progress)
 
@@ -115,7 +139,7 @@ def apicall(*args, **kwargs):
             break
         parsed = urlparse.urlparse(url)
         params["cursor"] = urlparse.parse_qs(parsed.query)["cursor"][0]
-        resp = coreapi_client.action(decoded_doc, keys, params=params)
+        resp = coreapi_client.action(get_document(), keys, params=params)
 
         echo_resp(resp)
 
@@ -147,18 +171,9 @@ def add_command(parent_command, name, metadata):
     parent_command.add_command(command)
 
 
-store = open(DOCUMENT_PATH, "rb")
-content = store.read()
-store.close()
-codec = coreapi.codecs.CoreJSONCodec()
-decoded_doc = codec.decode(content)
-
-
-with open(DOCUMENT_PATH) as doc:
-    doc = json.load(doc)
-    for action, value in doc.items():
-        if not action.startswith("_"):
-            add_command(client, action, value)
+for action, value in get_raw_document().items():
+    if not action.startswith("_"):
+        add_command(client, action, value)
 
 
 if __name__ == "__main__":

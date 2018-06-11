@@ -26,8 +26,14 @@ This is a proof-of-concept intended to demonstrate an auto-generated Pulp 3 CLI.
 $ git clone https://github.com/werwty/pulp-cli.git && cd pulp-cli
 $ mkvirtualenv --python="/usr/bin/python3" pulp-cli
 $ pip install -e .
-$ mkdir ~/.coreapi
-$ http :8000/pulp/api/v3/?format=corejson > ~/.coreapi/document.json
+```
+
+## Load Pulp COREAPI Schema
+
+The Pulp API schema has to be loaded before the CLI can be used
+
+```
+pulp get --url=http://pulp3.dev:8000/pulp/api/v3/?format=corejson
 ```
 
 ## Set up BASH Completion

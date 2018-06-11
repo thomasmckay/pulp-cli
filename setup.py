@@ -8,7 +8,15 @@ setup(
     author="",
     author_email="",
     packages=find_packages(exclude=["test"]),
-    install_requires=["coreapi", "click", "click_completion", "psutil", "progress", "pygments"],
+    install_requires=[
+        "coreapi",
+        "click",
+        "click_completion",
+        "psutil",
+        "progress",
+        "pygments",
+        "requests",
+    ],
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
