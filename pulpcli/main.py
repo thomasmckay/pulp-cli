@@ -64,11 +64,14 @@ def client(ctx):
 
 
 @client.command(help="Fetch a coreapi schema")
-@click.option("--url", help="url to pulp coreapi schema")
+@click.option("--url", help="url to pulp coreapi schema", prompt=True)
 def get(url):
     if not os.path.exists(CLI_PATH):
         os.mkdir(CLI_PATH)
     resp = requests.get(url)
+    if not resp.ok:
+        click.echo("Something went wrong: {}".format(resp.json()))
+        exit(1)
     open(DOCUMENT_PATH, "wb").write(resp.content)
     click.echo("Schema written to {}".format(DOCUMENT_PATH))
     exit(0)

@@ -30,7 +30,15 @@ $ pip install -e .
 
 ## Load Pulp COREAPI Schema
 
-The Pulp API schema has to be loaded before the CLI can be used
+To authenticate with the pulp3 server please configure your `.netrc` file:
+
+```
+machine pulp3.dev
+login admin
+password admin
+```
+
+The Pulp API schema has to be loaded before the CLI can be used.
 
 ```
 pulp get --url=http://pulp3.dev:8000/pulp/api/v3/?format=corejson
