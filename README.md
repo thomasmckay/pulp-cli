@@ -36,10 +36,12 @@ The Pulp API schema has to be loaded before the CLI can be used
 pulp get --url=http://pulp3.dev:8000/pulp/api/v3/?format=corejson
 ```
 
-## Set up BASH Completion
+## Set up autocompletion
+
+Currently supports bash, zsh, fish, and powershell
 
 ```
-$ pulp --install bash
+$ pulp --autocomplete
 ```
 
 ## Example Usage

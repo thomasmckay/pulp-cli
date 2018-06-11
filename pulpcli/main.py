@@ -40,21 +40,21 @@ def get_raw_document():
 
 
 # Install for click-completion
-def install_callback(ctx, attr, value):
+def autocomplete_callback(ctx, attr, value):
     if not value or ctx.resilient_parsing:
         return value
     shell, path = click_completion.install()
-    click.echo("%s completion installed in %s" % (shell, path))
+    click.echo("{} completion installed in {}".format(shell, path))
     exit(0)
 
 
 @click.group(invoke_without_command=True)
 @click.option(
-    "--install",
+    "--autocomplete",
     is_flag=True,
-    callback=install_callback,
+    callback=autocomplete_callback,
     expose_value=False,
-    help="Install completion for the current shell. Make sure to have psutil installed.",
+    help="Install autocompletion for the current shell. Supported shells: bash, zsh, fish, powershell",
 )
 @click.pass_context
 def client(ctx):
@@ -70,7 +70,8 @@ def get(url):
         os.mkdir(CLI_PATH)
     resp = requests.get(url)
     open(DOCUMENT_PATH, "wb").write(resp.content)
-
+    click.echo("Schema written to {}".format(DOCUMENT_PATH))
+    exit(0)
 
 def is_uuid4(uuid_string):
     try:
