@@ -12,7 +12,7 @@ from time import sleep
 from uuid import UUID
 
 
-DOCUMENT_PATH = "/home/vagrant/.coreapi/document.json"
+DOCUMENT_PATH = "/home/vagrant/.pulpcli/document.json"
 click_completion.init()
 decoded_doc = ""
 
@@ -45,11 +45,10 @@ def client(ctx):
 
 def is_uuid4(uuid_string):
     try:
-        val = UUID(uuid_string, version=4)
+        UUID(uuid_string, version=4)
     except ValueError:
         return False
-
-    return val.hex == uuid_string
+    return True
 
 
 def echo_resp(response):
@@ -77,7 +76,7 @@ def apicall(*args, **kwargs):
     for k, v in params.items():
 
         # If as passed in pk is not a uuid, see if we can find the uuid
-        if k.endswith("_pk") and not is_uuid4(v):
+        if (k.endswith("_pk") or k =="id") and not is_uuid4(v):
             resp = coreapi_client.action(
                 decoded_doc, [keys[0], "list"], params={"name": v}
             )
@@ -92,7 +91,7 @@ def apicall(*args, **kwargs):
     echo_resp(resp)
 
     # If coreapi client returns task_id, follow it and run a spinner until task is complete
-    if "task_id" in resp:
+    if resp and "task_id" in resp:
         spinner = Spinner("Loading ")
         task_progress = coreapi_client.action(
             decoded_doc, ["tasks", "read"], params={"id": resp.get("task_id")}
