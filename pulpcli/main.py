@@ -73,6 +73,7 @@ def get(url):
     click.echo("Schema written to {}".format(DOCUMENT_PATH))
     exit(0)
 
+
 def is_uuid4(uuid_string):
     try:
         UUID(uuid_string, version=4)

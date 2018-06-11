@@ -38,7 +38,7 @@ pulp get --url=http://pulp3.dev:8000/pulp/api/v3/?format=corejson
 
 ## Set up autocompletion
 
-Currently supports bash, zsh, fish, and powershell
+Run this command in your preferred shell. Currently supports bash, zsh, fish, and powershell
 
 ```
 $ pulp --autocomplete
