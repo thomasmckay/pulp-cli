@@ -23,7 +23,7 @@ This is a proof-of-concept intended to demonstrate an auto-generated Pulp 3 CLI.
 ## Installation
 
 ```
-$ git clone https://github.com/werwty/pulp-cli.git && cd pulp-cli
+$ git clone https://github.com/pulp/pulp-cli.git && cd pulp-cli
 $ mkvirtualenv --python="/usr/bin/python3" pulp-cli
 $ pip install -e .
 ```
